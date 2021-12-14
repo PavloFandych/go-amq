@@ -26,18 +26,18 @@ func errorProcessing(err error) {
 }
 
 func Producer(stompConn *stomp.Conn, wg *sync.WaitGroup) {
-	message := "file:///home/total/forTest/1/"
+	message := "TEXT MESSAGE"
 	log.Println("Sent...->", message)
-	if err := stompConn.Send("mi.ReSyncDataProviderService.v.3.1.listDeepSubFoldersByPathByType",
+	if err := stompConn.Send("target-queue",
 		"text/plain", []byte(message), stomp.SendOpt.Receipt,
-		stomp.SendOpt.Header("JMSReplyTo", "RESPONSES")); err != nil {
+		stomp.SendOpt.Header("JMSReplyTo", "response-queue")); err != nil {
 		errorProcessing(err)
 	}
 	wg.Done()
 }
 
 func Consumer(stompConn *stomp.Conn, wg *sync.WaitGroup) {
-	sub, err := stompConn.Subscribe("RESPONSES", stomp.AckAuto)
+	sub, err := stompConn.Subscribe("target-queue", stomp.AckAuto)
 	errorProcessing(err)
 	message := <-sub.C
 	log.Println("Received...->", string(message.Body))
